@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: meal-api-deployment
+
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: meal-api
+
+  template:
+    metadata:
+      labels:
+        app: meal-api
+
+    spec:
+      initContainers:  #Init-containers run before the main container to load the requirements for the main pod
+        - name: init-meal-data
+          image: busybox #busybox is a linux toolkit with all the basic commands installed. 
+          command:
+            - sh
+            - -c
+            - |
+              echo "Init container started"
+              mkdir -p /app/data
+              echo "Meal app initialized by init container" > /app/data/startup-message.txt
+              echo "Init container completed"
+              #After init container is started we can see this message 
+              # Meal app initialized by init container
+          volumeMounts:
+            - name: meal-storage
+              mountPath: /app/data #This is the common storage shared by main container as well. Same Mount. Volume is defined as Volume at pod level
+              
+      containers:
+        - name: meal-api-container
+          image: meal-api:v6
+          imagePullPolicy: Never
+
+          ports:
+            - containerPort: 8080
+
+          volumeMounts:
+            - name: meal-storage
+              mountPath: /app/data   # Storage visible inside container here
+              #We use /app here because our Application code lies here. It can be any other name
+              #It should always be an absolute path and linux absolute path starts with /
+
+          env:
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: meal-app-config
+                  key: PORT
+
+            - name: APP_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: meal-app-config
+                  key: APP_ENV
+
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: meal-app-config
+                  key: DB_NAME
+
+            - name: DB_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: meal-app-config
+                  key: DB_USER
+
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: meal-app-secret
+                  key: DB_PASSWORD
+                  
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: meal-app-config
+                  key: DB_HOST
+                  
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: meal-app-config
+                  key: DB_PORT
+
+            
+
+      volumes:
+        - name: meal-storage
+          emptyDir: {}   # Temporary pod-level storage
+          
+          

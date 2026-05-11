@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: meal-api-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: meal-api.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: meal-api-service
+                port:
+                  number: 80 #Here we can add more services, either under the same host or a different host. This host is mapped to minikube IP in
+                  # hosts file under Syster32 (in laptop)
