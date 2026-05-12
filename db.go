@@ -6,11 +6,11 @@ import (
 	"log"
 	"meal-api/config"
 
-	_ "github.com/lib/pq"
+	_ "github.com/lib/pq" //run go get github.com/lib/pq to install this
 )
-
+//config.Config - From config package, Config struct
 func ConnectDB(cfg config.Config) *sql.DB {
-	connStr := fmt.Sprintf(
+	connStr := fmt.Sprintf( //Sprintf can be saved in a variable
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		cfg.DBHost,
 		cfg.DBPort,
@@ -18,7 +18,7 @@ func ConnectDB(cfg config.Config) *sql.DB {
 		cfg.DBPass,
 		cfg.DBName,
 	)
-	db, err := sql.Open("postgres", connStr)
+	db, err := sql.Open("postgres", connStr) //sql.Open to connect with DB
 
 	if err != nil {
 		log.Fatal("Error opening DB:", err)
