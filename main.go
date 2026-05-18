@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"meal-api/config"
 	"net/http"
+	"sync"
+	"time"
 )
 
 var db *sql.DB
@@ -97,6 +99,14 @@ func mealsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		//Go Routine - Calling the fuction concurrently by creating a new thread
+
+		//Starting 2 go routines
+		var wg sync.WaitGroup                 //Initialize wait group
+		wg.Add(2)                             //Informing that there are 2 goroutines to be executed
+		go CalculateHealthScore(newMeal, &wg) //&wg because we need to update the same wait group
+		go CalculateProteinCategory(newMeal, &wg)
+		wg.Wait()
 		w.WriteHeader(http.StatusCreated)
 
 		json.NewEncoder(w).Encode(newMeal)
@@ -106,12 +116,34 @@ func mealsHandler(w http.ResponseWriter, r *http.Request) {
 
 	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 }
+func CalculateHealthScore(meal Meal, wg *sync.WaitGroup) {
+	defer wg.Done() //Indicating that this function has been executed
+	fmt.Println("Calculating Health Score")
+	time.Sleep(3 * time.Second)
+	fmt.Println("Health Score Calculated")
+}
+
+func CalculateProteinCategory(meal Meal, wg *sync.WaitGroup) {
+	defer wg.Done()
+	fmt.Println("Calculating Protein Category")
+	time.Sleep(4 * time.Second)
+	fmt.Println("Protein Category Calculated")
+}
+
+func WriteAuditLog(meal Meal) {
+
+	fmt.Println("Writing audit log for:", meal.Name)
+	//go routine will sleep for 3 seconds
+	time.Sleep(3 * time.Second)
+
+	fmt.Println("Audit completed for:", meal.Name)
+}
 
 func main() {
 	conf := config.LoadConfig()
 	fmt.Printf("DB Host %s\n", conf.DBHost)
 	db = ConnectDB(conf)
-	defer db.Close()
+	defer db.Close() //Defer ---- Run this function when the main function is executed.
 	http.HandleFunc("/health", healthHandler)
 	http.HandleFunc("/meals", mealsHandler)
 	fmt.Println("Server started on port 8080")

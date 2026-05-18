@@ -15,4 +15,4 @@ spec:
                 name: meal-api-service
                 port:
                   number: 80 #Here we can add more services, either under the same host or a different host. This host is mapped to minikube IP in
-                  # hosts file under Syster32 (in laptop)
+                  # hosts file under Syster32 (in laptop) 
