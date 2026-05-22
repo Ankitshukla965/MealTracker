@@ -13,7 +13,7 @@ import (
 )
 
 var db *sql.DB // Provided by go as Reference/handle to database connection manager
-
+// Pass it to every DB function to not create a new db connection - that's why *
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Meal API is running"))
 }
@@ -73,10 +73,11 @@ func mealsHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	conf := config.LoadConfig()
 	fmt.Printf("DB Host %s\n", conf.DBHost)
-	db = ConnectDB(conf)
-	defer db.Close() //Defer ---- Run this function when the main function is executed.
+	db = ConnectDB(conf) //db is defined as a global var of *sql.db type
+	defer db.Close()     //Defer ---- Run this function when the main function is executed.
 	http.HandleFunc("/health", healthHandler)
 	http.HandleFunc("/meals", mealsHandler)
 	fmt.Println("Server started on port 8080")
 	http.ListenAndServe(":8080", nil)
+
 }
