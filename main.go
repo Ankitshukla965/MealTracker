@@ -71,13 +71,14 @@ func mealsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	conf := config.LoadConfig()
-	fmt.Printf("DB Host %s\n", conf.DBHost)
-	db = ConnectDB(conf) //db is defined as a global var of *sql.db type
-	defer db.Close()     //Defer ---- Run this function when the main function is executed.
-	http.HandleFunc("/health", healthHandler)
-	http.HandleFunc("/meals", mealsHandler)
-	fmt.Println("Server started on port 8080")
-	http.ListenAndServe(":8080", nil)
-
+	conf, err := config.MustLoad()
+	if err == nil {
+		fmt.Printf("DB Host %s\n", conf.DBHost)
+		db = ConnectDB(*conf) //db is defined as a global var of *sql.db type
+		defer db.Close()      //Defer ---- Run this function when the main function is executed.
+		http.HandleFunc("/health", healthHandler)
+		http.HandleFunc("/meals", mealsHandler)
+		fmt.Println("Server started on port 8080")
+		http.ListenAndServe(":8080", nil)
+	}
 }

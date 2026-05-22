@@ -1,34 +1,24 @@
 package config
 
-import "os"
+import (
+	"github.com/ilyakaznacheev/cleanenv"
+)
 
 type Config struct {
-	Port   string
-	AppEnv string
-	DBName string
-	DBUser string
-	DBPass string
-	DBHost string
-	DBPort string
+	Port   string `env:"PORT" env-default:"8080"`
+	AppEnv string `env:"APP_ENV" env-default:"Dev"`
+	DBName string `env:"DB_NAME" env-default:"mealdb"`
+	DBUser string `env:"DB_USER" env-default:"postgres"`
+	DBPass string `env:"DB_PASS" env-default:"password123"`
+	DBHost string `env:"DB_HOST" env-default:"localhost"`
+	DBPort string `env:"DB_PORT" env-default:"5433"`
 }
 
-func LoadConfig() Config {
-	return Config{
-		Port:   getEnv("PORT", "8085"),
-		AppEnv: getEnv("APP_ENV", "Devlopment"),
-		DBHost: getEnv("DB_HOST", "localhost"),
-		DBPort: getEnv("DB_PORT", "5433"),
-		DBName: getEnv("DB_NAME", "mealdb"),
-		DBUser: getEnv("DB_USER", "postgres"),
-		DBPass: getEnv("DB_PASS", "password"),
-	}
-}
+func MustLoad() (*Config, error) {
 
-func getEnv(key string, defaultValue string) string {
-	value := os.Getenv(key)
+	var cfg Config
 
-	if value == "" {
-		return defaultValue
-	}
-	return value
+	err := cleanenv.ReadEnv(&cfg)
+
+	return &cfg, err
 }
