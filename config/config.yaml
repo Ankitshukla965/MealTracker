@@ -1,0 +1,6 @@
+app_port: "8080"
+db_host: "localhost"
+db_port: "5433"
+db_user: "postgres"
+db_pass: "password"
+db_name: "mealdb"

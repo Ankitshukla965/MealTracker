@@ -1,24 +1,58 @@
 package config
 
 import (
+	"flag"
+	"log"
+	"os"
+
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
 type Config struct {
-	Port   string `env:"PORT" env-default:"8080"`
-	AppEnv string `env:"APP_ENV" env-default:"Dev"`
-	DBName string `env:"DB_NAME" env-default:"mealdb"`
-	DBUser string `env:"DB_USER" env-default:"postgres"`
-	DBPass string `env:"DB_PASS" env-default:"password123"`
-	DBHost string `env:"DB_HOST" env-default:"localhost"`
-	DBPort string `env:"DB_PORT" env-default:"5433"`
+	AppPort string `yaml:"app_port" env:"PORT"`
+	DBHost  string `yaml:"db_host" env:"DB_HOST"`
+	DBPort  string `yaml:"db_port" env:"DB_PORT"`
+	DBUser  string `yaml:"db_user" env:"DB_USER"`
+	DBPass  string `yaml:"db_pass" env:"DB_PASS"`
+	DBName  string `yaml:"db_name" env:"DB_NAME"`
 }
 
 func MustLoad() (*Config, error) {
 
+	var configPath string
+
+	configPath = os.Getenv("CONFIG_PATH") //Check if it is available at the given location
+
+	if configPath == "" {
+		flags := flag.String("config", "", "configuratio file path")
+		// this is passed in CLI in this format --namespace=
+		flag.Parse()
+
+		configPath = *flags
+
+		if configPath == "" {
+			log.Fatal("Config path not found")
+		}
+		//Check if the file does not exists at the given location
+		if _, err := os.Stat(configPath); os.IsNotExist(err) {
+			log.Fatalf("config file does not exist: %s", configPath)
+		}
+	}
+
 	var cfg Config
 
-	err := cleanenv.ReadEnv(&cfg)
+	err := cleanenv.ReadConfig(configPath, &cfg)
 
-	return &cfg, err
+	if err != nil {
+		return nil, err
+	}
+
+	// Override using ENV vars
+	err = cleanenv.ReadEnv(&cfg)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &cfg, nil
 }
