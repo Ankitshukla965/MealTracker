@@ -32,6 +32,7 @@ func mealsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		//Serialize to convert into Json object
 		json.NewEncoder(w).Encode(meals)
+		return
 	}
 
 	if r.Method == http.MethodPost {
@@ -70,15 +71,47 @@ func mealsHandler(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 }
 
+// func main() {
+// 	conf, err := config.MustLoad()
+// 	if err == nil {
+// 		fmt.Printf("DB Host %s\n", conf.DBHost)
+// 		db = ConnectDB(*conf) //db is defined as a global var of type *sql.db type
+// 		defer db.Close()      //Defer ---- Run this function when the main function is executed.
+// 		http.HandleFunc("/health", healthHandler)
+// 		http.HandleFunc("/meals", mealsHandler)
+// 		fmt.Println("Server started on port 8080")
+// 		http.ListenAndServe(":8080", nil)
+// 	}
+// }
+
 func main() {
-	conf, err := config.MustLoad()
-	if err == nil {
-		fmt.Printf("DB Host %s\n", conf.DBHost)
-		db = ConnectDB(*conf) //db is defined as a global var of *sql.db type
-		defer db.Close()      //Defer ---- Run this function when the main function is executed.
-		http.HandleFunc("/health", healthHandler)
-		http.HandleFunc("/meals", mealsHandler)
-		fmt.Println("Server started on port 8080")
-		http.ListenAndServe(":8080", nil)
+
+	cfg, err := config.MustLoad()
+
+	if err != nil {
+		fmt.Printf("Configuration could not be loaded %s ", err)
 	}
+
+	db = ConnectDB(*cfg)
+	defer db.Close()
+
+	fmt.Printf("Configuration %s", cfg.DBHost)
+
+	router := http.NewServeMux()
+
+	router.HandleFunc("/fetchmeals", mealsHandler)
+
+	fmt.Printf("Server started")
+
+	server := http.Server{
+		Addr:    ":8080",
+		Handler: router,
+	}
+
+	err = server.ListenAndServe()
+
+	if err != nil {
+		fmt.Print("Server failed ", err)
+	}
+
 }
